@@ -1,0 +1,20 @@
+services:
+  webdav:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webdav
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/config  # Mount your WebDAV config directory with yaml config
+      - ./www:/www
+      - /raid5:/data
+    networks:
+      - webdav_network
+    restart: unless-stopped
+    command: ["wsgidav", "--config", "/config/wsgidav.local.yaml"]  # Override CMD for local development
+
+networks:
+  webdav_network:
+    driver: bridge  # Default bridge network for isolation

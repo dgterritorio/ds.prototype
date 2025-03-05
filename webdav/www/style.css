@@ -1,0 +1,103 @@
+body {
+    margin: 0;
+    padding: 8px;
+    color: #43525b;
+    font-family: "Open Sans",sans-serif;
+    font-size: 16px;
+    letter-spacing: 0;
+    line-height: 1.5;
+  }
+  hr {
+    border: 1px solid #4ab06f;
+  }
+  h1 {
+    margin: 4px 0 4px 0;
+  }
+  h1 img {
+    display: block;
+    padding-bottom: 20px;
+  }
+  img {
+    border: 0;
+    padding: 0 2px;
+    vertical-align: text-bottom;
+  }
+  table.dir-listing {
+    border: 0;
+    border-collapse: collapse;
+  }
+  table.dir-listing tbody tr:hover
+  {
+    background-color: #eee;
+  }
+  table.dir-listing tbody tr td a
+  {
+    color: #000;
+    text-decoration: none;
+  }
+  table.dir-listing tbody tr:hover td a
+  {
+    text-decoration: underline;
+  }
+  table.dir-listing tr.directory td a
+  {
+    font-weight: bold;
+  }
+  table.dir-listing th,
+  table.dir-listing td
+  {
+    padding: 2px 20px 2px 2px;
+    /* text-align: left; */
+    font-family: monospace;
+    vertical-align: bottom;
+    /* white-space: pre; */
+  }
+  table.dir-listing th:nth-child(3),
+  table.dir-listing td:nth-child(3)
+  {
+    text-align: right;
+  }
+  a.symlink {
+    font-style: italic;
+  }
+  p.auth-user {
+    font-size: smaller;
+    text-align: right;
+  }
+  p.trailer {
+    font-size: smaller;
+  }
+
+  .footer {
+      background-color: #c9c9c9;
+      padding: 25px 0 50px 0;
+      margin: 50px -25px -25px -25px;
+  }
+  .footer a {
+    color: #4ab06f;
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+  .footer ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: block;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 40px;
+  }
+  .footer li {
+    float: left;
+    margin-right: 1em;
+  }
+  .footer .container {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .footer .container {
+    padding: 0 1rem;
+  }

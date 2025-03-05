@@ -1,0 +1,5 @@
+cachetools==5.3.3
+botocore==1.34.139
+boto3==1.34.139
+awscrt==0.21.0
+lxml==5.2.2

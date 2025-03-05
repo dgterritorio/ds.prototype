@@ -1,0 +1,34 @@
+services:
+  webdav:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webdav
+    expose:
+      - "8080" # only on internal network
+    ports:
+      - "8080:8080"  # Internal communication between Nginx and WebDAV
+    volumes:
+      - ./config:/config  # Mount your WebDAV config directory with yaml config
+      - /raid5:/data      # Mount your WebDAV data directory for file support
+      - ./www:/www  # Mount your website directory
+    labels:
+      - "traefik.http.routers.webdav.rule=Host(`${BASE_URL}`) && PathPrefix(`/webdav`)"
+      - "traefik.http.routers.webdav.service=webdav"
+      - "traefik.http.routers.webdav.middlewares=traefik-auth,webdav-ratelimit"
+      - "traefik.http.services.webdav.loadbalancer.server.port=8080"
+      - "traefik.http.routers.webdav.entrypoints=https"
+      - "traefik.http.routers.webdav.tls=true"
+      - "traefik.http.routers.webdav.tls.certresolver=letsencrypt"
+      - "traefik.http.middlewares.webdav-ratelimit.ratelimit.average=10"
+      - "traefik.http.middlewares.webdav-ratelimit.ratelimit.burst=20"
+    networks:
+      - ortosat_int
+
+    restart: unless-stopped
+
+# Todo a single network for traefik and docker instances
+networks:
+  ortosat_int:
+    external: true
+    name: bigbrotherortosat_ortosat_int
