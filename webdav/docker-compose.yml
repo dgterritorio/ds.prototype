@@ -1,31 +1,62 @@
 services:
-  webdav:
+  webdav_private:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: webdav
+    container_name: webdav_private
     expose:
       - "8080" # only on internal network
     ports:
       - "8080:8080"  # Internal communication between Nginx and WebDAV
     volumes:
       - ./config:/config  # Mount your WebDAV config directory with yaml config
-      - /raid5:/data      # Mount your WebDAV data directory for file support
+      - /raid5/private:/data      # Mount your WebDAV data directory for file support
       - ./www:/www  # Mount your website directory
+    command: ["wsgidav", "--config", "/config/wsgidav.private.yaml"]
     labels:
-      - "traefik.http.routers.webdav.rule=Host(`${BASE_URL}`) && PathPrefix(`/webdav`)"
-      - "traefik.http.routers.webdav.service=webdav"
-      - "traefik.http.routers.webdav.middlewares=traefik-auth,webdav-ratelimit"
-      - "traefik.http.services.webdav.loadbalancer.server.port=8080"
-      - "traefik.http.routers.webdav.entrypoints=https"
-      - "traefik.http.routers.webdav.tls=true"
-      - "traefik.http.routers.webdav.tls.certresolver=letsencrypt"
-      - "traefik.http.middlewares.webdav-ratelimit.ratelimit.average=10"
-      - "traefik.http.middlewares.webdav-ratelimit.ratelimit.burst=20"
+      - "traefik.http.routers.webdav_private.rule=Host(`${BASE_URL}`) && PathPrefix(`/webdav-private`)"
+      - "traefik.http.routers.webdav_private.service=webdav_private"
+      - "traefik.http.routers.webdav_private.middlewares=traefik-auth@docker,webdav_private-ratelimit@docker"
+#      - "traefik.http.routers.webdav_private.middlewares=traefik-auth,webdav-ratelimit"
+      - "traefik.http.services.webdav_private.loadbalancer.server.port=8080"
+      - "traefik.http.routers.webdav_private.entrypoints=https"
+      - "traefik.http.routers.webdav_private.tls=true"
+      - "traefik.http.routers.webdav_private.tls.certresolver=letsencrypt"
+      - "traefik.http.middlewares.webdav_private-ratelimit.ratelimit.average=10"
+      - "traefik.http.middlewares.webdav_private-ratelimit.ratelimit.burst=20"
     networks:
       - ortosat_int
 
     restart: unless-stopped
+
+  webdav_public:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webdav_public
+    expose:
+      - "8181" # only on internal network
+    ports:
+      - "8181:8181"  # Internal communication between Nginx and WebDAV
+    volumes:
+      - ./config:/config  # Mount your WebDAV config directory with yaml config
+      - /raid5/public:/data      # Mount your WebDAV data directory for file support
+      - ./www:/www  # Mount your website directory
+    command: ["wsgidav", "--config", "/config/wsgidav.public.yaml"]
+    labels:
+      - "traefik.http.routers.webdav_public.rule=Host(`${BASE_URL}`) && PathPrefix(`/webdav-public`)"
+      - "traefik.http.routers.webdav_public.service=webdav_public"
+      - "traefik.http.routers.webdav_public.middlewares=webdav_private-ratelimit@docker"
+      - "traefik.http.services.webdav_public.loadbalancer.server.port=8181"
+      - "traefik.http.routers.webdav_public.entrypoints=https"
+      - "traefik.http.routers.webdav_public.tls=true"
+      - "traefik.http.routers.webdav_public.tls.certresolver=letsencrypt"
+      - "traefik.http.middlewares.webdav_public-ratelimit.ratelimit.average=10"
+      - "traefik.http.middlewares.webdav_public-ratelimit.ratelimit.burst=20"
+    networks:
+      - ortosat_int
+    restart: unless-stopped
+
 
 # Todo a single network for traefik and docker instances
 networks:
