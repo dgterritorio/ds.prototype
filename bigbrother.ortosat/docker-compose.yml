@@ -1,0 +1,115 @@
+
+services:
+
+  influxdb:
+    image: influxdb:2
+    ports:
+      - 8086:8086
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    networks:
+      - ortosat_int
+      #- ortosat_ext
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.influxdb.rule=Host(`${BASE_URL}`) && PathPrefix(`/influxdb`)"
+      - "traefik.http.routers.influxdb.service=influxdb"
+      - "traefik.http.routers.influxdb.middlewares=traefik-auth"
+      - "traefik.http.services.influxdb.loadbalancer.server.port=8086"
+      - "traefik.http.routers.influxdb.entrypoints=https"
+      - "traefik.http.routers.influxdb.tls=true"
+      - "traefik.http.routers.influxdb.tls.certresolver=letsencrypt"
+    logging:
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  traefik:
+    image: traefik:v3.3.2
+    command:
+      - "--log.level=${TRAEFIK_LOG_LEVEL}"
+      - "--api.dashboard=true"
+      - "--metrics.influxdb2=true"
+      - "--metrics.influxdb2.address=http://influxdb:8086"
+      - "--metrics.influxdb2.token=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}"
+      - "--metrics.influxdb2.org=${DOCKER_INFLUXDB_INIT_ORG}"
+      - "--metrics.influxdb2.bucket=${DOCKER_INFLUXDB_INIT_BUCKET}"
+      - "--metrics.influxdb2.addRoutersLabels=true"
+      - "--metrics.influxdb2.pushInterval=60s"
+      - "--providers.docker=true"
+      - "--providers.docker.watch"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      #- "--certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http"
+      - "--certificatesresolvers.letsencrypt.acme.email=${CERT_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    volumes:
+      #- ./configs/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      - "traefik.http.routers.traefik-ui.rule=Host(`${BASE_URL}`)"
+      - "traefik.http.routers.traefik-ui.service=api@internal"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH}"
+      - "traefik.http.middlewares.traefik-auth.basicauth.removeheader=true"
+      - "traefik.http.routers.traefik-ui.middlewares=traefik-auth"
+      # Redirect HTTP traffic to HTTPS
+      - "traefik.http.middlewares.to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.to-https.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.to-https.entrypoints=http"
+      - "traefik.http.routers.to-https.middlewares=to-https"
+      - "traefik.http.routers.traefik-ui.entrypoints=https"
+      - "traefik.http.routers.traefik-ui.tls=true"
+      - "traefik.http.routers.traefik-ui.tls.certresolver=letsencrypt"
+    networks:
+      - ortosat_int
+      #- ortosat_ext
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  grafana:
+    image: grafana/grafana
+    depends_on:
+      - influxdb
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./configs/grafana/provisioning/:/etc/grafana/provisioning/
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`${BASE_URL}`) && PathPrefix(`/grafana`)"
+      - "traefik.http.routers.grafana.service=grafana"
+      - "traefik.http.routers.grafana.middlewares=traefik-auth"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.entrypoints=https"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+    environment:
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_SERVER_ROOT_URL: "http://${BASE_URL}/grafana"
+    networks:
+      - ortosat_int
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+volumes:
+  influxdb-data:
+  influxdb-config:
+  grafana-data:
+  letsencrypt:
+
+networks:
+  ortosat_int:
+  ortosat_ext:
