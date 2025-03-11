@@ -1,0 +1,37 @@
+services:
+  loadbalancer:
+    image: nginx:1.27.2-alpine3.20-perl@sha256:56353c4ab2e5d704ff4520411819419cb9058fe9af2981c4d50d04442e3247a2
+    container_name: minio_lb
+    hostname: minio.local
+    ports:
+      - "9000:9000"  # S3 API
+      - "9001:9001"  # Console
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - minio1
+      - minio2
+
+  minio1:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z@sha256:ac591851803a79aee64bc37f66d77c56b0a4b6e12d9e5356380f4105510f2332
+    container_name: minio1
+    hostname: minio.local # Better to have the same localhost for compatible signatuer
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - /mnt/minio/node1/data:/data
+    command: server http://minio1:9000/data http://minio2:9000/data  --console-address ":9001"
+
+  minio2:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z@sha256:ac591851803a79aee64bc37f66d77c56b0a4b6e12d9e5356380f4105510f2332
+    container_name: minio2
+    hostname: minio.local
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - /mnt/minio/node2/data:/data
+    command: server http://minio1:9000/data http://minio2:9000/data  --console-address ":9001"
