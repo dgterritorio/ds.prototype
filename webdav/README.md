@@ -10,6 +10,20 @@ Python version: `3.12.7` (source build with pyenv).
 
 This S3-wsgidav implementation was tested with WUR (unsigned and global bucket) and OVH (signed and regional bucket). Important to understand that a global bucket like the WUR implementation (no regions) is also an unsigned bucket. Even if an object is public is may requre signed/unsiged acess.
 
+## Env and rate limits
+
+Mandatory `.env` file with base url and ratelimits like this:
+
+```
+BASE_URL=dadosabertos.dgterritorio.gov.pt
+RATELIMIT_AVERAGE=100
+RATELIMIT_BURTS=200
+```
+
+The 100 and 200 values were tested for a single user on QGIS and navigating a COG.
+
+`export CPL_DEBUG=ON  && CPL_CURL_VERBOSE=ON && qgis`
+
 ## Pyenv for development
 
 Local pyenv environment for development:
@@ -144,3 +158,12 @@ CMD ["wsgidav","--config", "/config/wsgidav.yaml"]
 ```
 
 With provider being called on the yaml file.
+
+## Rate limits
+
+To limit rates using traefik, set the following env on `.env`
+
+```.env
+RATELIMIT_AVERAGE=100
+RATELIMIT_BURTS=200
+```

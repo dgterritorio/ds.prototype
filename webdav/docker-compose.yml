@@ -22,8 +22,9 @@ services:
       - "traefik.http.routers.webdav_private.entrypoints=https"
       - "traefik.http.routers.webdav_private.tls=true"
       - "traefik.http.routers.webdav_private.tls.certresolver=letsencrypt"
-      - "traefik.http.middlewares.webdav_private-ratelimit.ratelimit.average=10"
-      - "traefik.http.middlewares.webdav_private-ratelimit.ratelimit.burst=20"
+      - "traefik.http.middlewares.webdav_private-ratelimit.ratelimit.average=${RATELIMIT_AVERAGE}"
+      - "traefik.http.middlewares.webdav_private-ratelimit.ratelimit.burst=${RATELIMIT_BURTS}"
+
     networks:
       - ortosat_int
 
@@ -51,8 +52,8 @@ services:
       - "traefik.http.routers.webdav_public.entrypoints=https"
       - "traefik.http.routers.webdav_public.tls=true"
       - "traefik.http.routers.webdav_public.tls.certresolver=letsencrypt"
-      - "traefik.http.middlewares.webdav_public-ratelimit.ratelimit.average=10"
-      - "traefik.http.middlewares.webdav_public-ratelimit.ratelimit.burst=20"
+      - "traefik.http.middlewares.webdav_private-ratelimit.ratelimit.average=${RATELIMIT_AVERAGE}"
+      - "traefik.http.middlewares.webdav_private-ratelimit.ratelimit.burst=${RATELIMIT_BURTS}"
     networks:
       - ortosat_int
     restart: unless-stopped
